@@ -1,0 +1,11 @@
+{
+  "name": "humanizer-zh",
+  "description": "编辑中文文章、评论和文档中的空话、重复及模板化表达，让文字更自然，同时保留事实、确定程度和作者声音。",
+  "author": {
+    "name": "op7418",
+    "url": "https://github.com/op7418/Humanizer-zh"
+  },
+  "homepage": "https://github.com/op7418/Humanizer-zh",
+  "repository": "https://github.com/cuso0925/Humanizer-zh",
+  "license": "MIT"
+}

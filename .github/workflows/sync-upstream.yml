@@ -1,0 +1,52 @@
+name: Sync upstream
+
+# 每周一 10:17（北京时间）检查 op7418/Humanizer-zh 是否有更新。
+# 有更新时：合并到新分支，同步 skills/humanizer-zh/SKILL.md，并开一个 PR 等你确认，不会直接改 main。
+on:
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Merge upstream and open PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git remote add upstream https://github.com/op7418/Humanizer-zh.git
+          git fetch upstream main
+
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "Already up to date with upstream."
+            exit 0
+          fi
+
+          BR="sync/upstream-$(date +%Y%m%d)"
+          git checkout -b "$BR"
+          git merge upstream/main -m "Merge upstream op7418/Humanizer-zh"
+
+          # 插件读取的是 skills/ 目录下的副本，保持与根目录 SKILL.md 一致
+          mkdir -p skills/humanizer-zh
+          cp SKILL.md skills/humanizer-zh/SKILL.md
+          git add -A
+          git diff --cached --quiet || git commit -m "Sync skills/humanizer-zh/SKILL.md from upstream"
+
+          git push origin "$BR"
+          gh pr create \
+            --base main --head "$BR" \
+            --title "同步上游 op7418/Humanizer-zh ($(date +%Y-%m-%d))" \
+            --body "自动合并上游最新提交，并同步 skills/humanizer-zh/SKILL.md。请先查看 Files changed 再合并。"
